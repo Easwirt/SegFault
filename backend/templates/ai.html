@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Query Visualizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .error-message {
+            color: #dc3545;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            display: none;
+        }
+        
+        #loading {
+            display: none;
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .result-container {
+            margin-top: 2rem;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+        }
+        
+        .sql-query {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            white-space: pre-wrap;
+        }
+        
+        .visualization-container {
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        .visualization-container img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .query-results {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5 mb-5">
+        <h2 class="mb-4">SQL Query Visualizer</h2>
+        
+        <form id="queryForm" class="mb-4">
+            <div class="mb-3">
+                <label for="dbPath" class="form-label">Database Path:</label>
+                <input type="text" class="form-control" id="dbPath" required
+                       placeholder="Enter the full path to your SQLite database (e.g., /path/to/your/database.db)">
+                <div class="form-text">Please provide the absolute path to your SQLite database file</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="queryInput" class="form-label">Natural Language Query:</label>
+                <textarea class="form-control" id="queryInput" rows="3" required
+                          placeholder="Example: Show me the total sales by product category for the last month"></textarea>
+                <div class="form-text">Describe what you want to know about your data in plain English</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Generate Visualization</button>
+        </form>
+
+        <div id="loading" class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Processing your query...</p>
+        </div>
+
+        <div id="error" class="alert alert-danger error-message" role="alert"></div>
+
+        <div id="resultContainer" class="result-container" style="display: none;">
+            <div class="mb-4">
+                <h5>Generated SQL Query:</h5>
+                <pre id="sqlQuery" class="sql-query"></pre>
+            </div>
+
+            <div class="visualization-container">
+                <h5>Visualization:</h5>
+                <div id="visualization"></div>
+            </div>
+
+            <div class="mb-4">
+                <h5>Query Results:</h5>
+                <div class="query-results">
+                    <pre id="queryResults" class="sql-query"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        async function processQuery(event) {
+            event.preventDefault();
+            
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const resultContainer = document.getElementById('resultContainer');
+            
+            // Reset previous state
+            error.style.display = 'none';
+            resultContainer.style.display = 'none';
+            loading.style.display = 'block';
+
+            const query = document.getElementById('queryInput').value.trim();
+            const dbPath = document.getElementById('dbPath').value.trim();
+
+            if (!query || !dbPath) {
+                error.textContent = 'Please fill in both the database path and query.';
+                error.style.display = 'block';
+                loading.style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/ai/process-query/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        db_path: dbPath
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    error.textContent = data.error;
+                    error.style.display = 'block';
+                } else {
+                    resultContainer.style.display = 'block';
+                    
+                    // Display SQL query
+                    document.getElementById('sqlQuery').textContent = data.sql_query;
+                    
+                    // Display results
+                    document.getElementById('queryResults').textContent = 
+                        JSON.stringify(data.query_results, null, 2);
+
+                    // Display visualization
+                    const visualizationDiv = document.getElementById('visualization');
+                    visualizationDiv.innerHTML = '';
+                    if (data.visualization) {
+                        const img = document.createElement('img');
+                        img.src = 'data:image/png;base64,' + data.visualization;
+                        img.alt = 'Query visualization';
+                        img.className = 'img-fluid';
+                        visualizationDiv.appendChild(img);
+                    }
+                }
+            } catch (error) {
+                error.textContent = 'An error occurred while processing your request: ' + error.message;
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        document.getElementById('queryForm').addEventListener('submit', processQuery);
+    </script>
+</body>
+</html>

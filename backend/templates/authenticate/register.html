@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Register</title>
     <style>
-        /* Your existing CSS styles */
         body {
             margin: 0;
             padding: 0;
@@ -17,7 +16,7 @@
             background: linear-gradient(120deg, #2980b9, #8e44ad);
         }
 
-        .login-container {
+        .register-container {
             background: rgba(255, 255, 255, 0.95);
             padding: 40px;
             border-radius: 10px;
@@ -25,7 +24,7 @@
             width: 300px;
         }
 
-        .login-container h2 {
+        .register-container h2 {
             margin: 0 0 30px;
             text-align: center;
             color: #333;
@@ -70,6 +69,12 @@
             border-bottom: 2px solid #2980b9;
         }
 
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
         button {
             width: 100%;
             padding: 10px 0;
@@ -86,46 +91,54 @@
             background: #3498db;
         }
 
-        .register-link {
+        .login-link {
             margin-top: 20px;
             text-align: center;
             font-size: 14px;
             color: #666;
         }
 
-        .register-link a {
+        .login-link a {
             color: #2980b9;
             text-decoration: none;
         }
 
-        .register-link a:hover {
+        .login-link a:hover {
             text-decoration: underline;
         }
     </style>
 </head>
 <body>
+    <div class="register-container">
+        <h2>Register</h2>
         {% if messages %}
-    <div>
-        {% for message in messages %}
-        <div>{{ message }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    <div class="login-container">
-        <h2>Login</h2>
-        <form method="POST" action="{% url 'login_user' %}">
+        <div>
+            {% for message in messages %}
+            <div class="error-message">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <form method="post" action="{% url 'register_user' %}">
             {% csrf_token %}
             <div class="input-group">
-                <input type="text" id="username" name="username" required>
+                <input type="text" name="username" id="username" required>
                 <label for="username">Username</label>
             </div>
             <div class="input-group">
-                <input type="password" id="password" name="password" required>
+                <input type="email" name="email" id="email" required>
+                <label for="email">Email</label>
+            </div>
+            <div class="input-group">
+                <input type="password" name="password" id="password" required>
                 <label for="password">Password</label>
             </div>
-            <button type="submit">Login</button>
-            <div class="register-link">
-                Don't have an account? <a href="{% url 'register_user' %}">Register here</a>
+            <div class="input-group">
+                <input type="password" name="confirmPassword" id="confirmPassword" required>
+                <label for="confirmPassword">Confirm Password</label>
+            </div>
+            <button type="submit">Register</button>
+            <div class="login-link">
+                Already have an account? <a href="{% url 'login_user' %}">Login here</a>
             </div>
         </form>
     </div>

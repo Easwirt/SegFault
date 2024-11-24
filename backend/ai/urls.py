@@ -3,5 +3,5 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('generate-sql/', views.generate_sql_query, name='generate_sql_query'),
+    path('process-query/', views.process_query_and_visualize, name='process_query'),
 ]
