@@ -226,6 +226,7 @@
               </tr>
             </thead>
             <tbody>
+              {% csrf_token %}
               {% for upload in user_uploads %}
               <t>
                 <td>{{ upload.original_filename }}</td>

@@ -19,7 +19,7 @@ import os
 from backend.settings import MEDIA_ROOT
 
 def csv_to_db(name):
-    csv_file_path =  MEDIA_ROOT + '/csv/' + name + '.csv'
+    csv_file_path =  MEDIA_ROOT + 'csv/' + name + '.csv'
 
     # Подключение к SQLite базе данных
     conn = sqlite3.connect(MEDIA_ROOT + name + '.db')
@@ -84,58 +84,58 @@ def process_query_and_visualize(request):
         if(request.user.is_authenticated):
             db_path = MEDIA_ROOT + data.get('db_path', '').strip() + '.db'
             csv_to_db(data.get('db_path', '').strip())
-
-            connection = sqlite3.connect(db_path)
-            cursor = connection.cursor()
-
-            # Fetch table names
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-            tables = cursor.fetchall()
-
-            # Get schema details for each table
-            schema_details = []
-            for table_name, in tables:
-                cursor.execute(f"PRAGMA table_info({table_name});")
-                columns = cursor.fetchall()
-
-                cursor.execute(f"PRAGMA foreign_key_list({table_name});")
-                foreign_keys = cursor.fetchall()
-
-                schema_details.append({
-                    "table_name": table_name,
-                    "columns": columns,
-                    "foreign_keys": foreign_keys,
-                })
-
-            # Generate schema representation
-            schema_representation = []
-            for table in schema_details:
-                table_name = table["table_name"]
-                schema_representation.append(f"-- Table: {table_name}")
-                schema_representation.append(f"CREATE TABLE {table_name} (")
-
-                column_definitions = []
-                for column in table["columns"]:
-                    col_name = column[1]
-                    col_type = column[2]
-                    col_nullable = "NOT NULL" if column[3] == 0 else ""
-                    col_pk = "PRIMARY KEY" if column[5] == 1 else ""
-                    column_definitions.append(f"  {col_name} {col_type} {col_nullable} {col_pk}".strip())
-
-                schema_representation.extend(column_definitions)
-
-                if table["foreign_keys"]:
-                    schema_representation.append(",\n  -- Foreign Keys:")
-                    for fk in table["foreign_keys"]:
-                        fk_def = f"  FOREIGN KEY ({fk[3]}) REFERENCES {fk[2]}({fk[4]})"
-                        schema_representation.append(fk_def)
-
-                schema_representation.append(");")
-                schema_representation.append("")
-
-            schema_sql = "\n".join(schema_representation)
         else:
             db_path = MEDIA_ROOT + 'def/mydatabase.db'
+
+        connection = sqlite3.connect(db_path)
+        cursor = connection.cursor()
+
+            # Fetch table names
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = cursor.fetchall()
+
+            # Get schema details for each table
+        schema_details = []
+        for table_name, in tables:
+            cursor.execute(f"PRAGMA table_info({table_name});")
+            columns = cursor.fetchall()
+
+            cursor.execute(f"PRAGMA foreign_key_list({table_name});")
+            foreign_keys = cursor.fetchall()
+
+            schema_details.append({
+                "table_name": table_name,
+                "columns": columns,
+                "foreign_keys": foreign_keys,
+            })
+
+            # Generate schema representation
+        schema_representation = []
+        for table in schema_details:
+            table_name = table["table_name"]
+            schema_representation.append(f"-- Table: {table_name}")
+            schema_representation.append(f"CREATE TABLE {table_name} (")
+            column_definitions = []
+
+            for column in table["columns"]:
+                col_name = column[1]
+                col_type = column[2]
+                col_nullable = "NOT NULL" if column[3] == 0 else ""
+                col_pk = "PRIMARY KEY" if column[5] == 1 else ""
+                column_definitions.append(f"  {col_name} {col_type} {col_nullable} {col_pk}".strip())
+
+            schema_representation.extend(column_definitions)
+
+            if table["foreign_keys"]:
+                schema_representation.append(",\n  -- Foreign Keys:")
+                for fk in table["foreign_keys"]:
+                    fk_def = f"  FOREIGN KEY ({fk[3]}) REFERENCES {fk[2]}({fk[4]})"
+                    schema_representation.append(fk_def)
+
+            schema_representation.append(");")
+            schema_representation.append("")
+
+        schema_sql = "\n".join(schema_representation)
 
         if not user_query or not db_path:
             return JsonResponse({
@@ -194,7 +194,7 @@ def process_query_and_visualize(request):
                     "content": [
                         {
                             "type": "text",
-                            "text": "based on query select and request from user make a conclusion about statistic"
+                            "text": "based only on query select and request from user make only a conclusion about statistic and dont say how you do it"
                         }
                     ]
                 },
