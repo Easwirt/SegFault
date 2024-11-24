@@ -109,11 +109,11 @@
 
         async function processQuery(event) {
             event.preventDefault();
-            
+
             const loading = document.getElementById('loading');
             const error = document.getElementById('error');
             const resultContainer = document.getElementById('resultContainer');
-            
+
             // Reset previous state
             error.style.display = 'none';
             resultContainer.style.display = 'none';
@@ -149,12 +149,12 @@
                     error.style.display = 'block';
                 } else {
                     resultContainer.style.display = 'block';
-                    
+
                     // Display SQL query
                     document.getElementById('sqlQuery').textContent = data.sql_query;
-                    
+
                     // Display results
-                    document.getElementById('queryResults').textContent = 
+                    document.getElementById('queryResults').textContent =
                         JSON.stringify(data.query_results, null, 2);
 
                     // Display visualization

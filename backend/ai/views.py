@@ -1,3 +1,5 @@
+import csv
+
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
@@ -13,6 +15,56 @@ import json
 import sqlite3
 import os
 
+def csv_to_db():
+    csv_file_path = '/home/easwirt/1_projects/python/SegFault/backend/ai/base/time_series_19-covid-Confirmed_archived_0325.csv'
+
+    # Подключение к SQLite базе данных
+    conn = sqlite3.connect('/home/easwirt/1_projects/python/SegFault/backend/ai/base/time_series_19-covid-Confirmed_archived_0325.db')
+    cursor = conn.cursor()
+
+    # Чтение данных из CSV файла
+    with open(csv_file_path, 'r', encoding='utf-8') as csv_file:
+        reader = csv.DictReader(csv_file)
+        columns = reader.fieldnames  # Получаем названия столбцов из заголовков CSV
+
+        # Удаление дубликатов из названий столбцов
+        unique_columns = []
+        seen = set()
+        for col in columns:
+            if col in seen:
+                # Добавляем суффикс для устранения дубликата
+                count = 1
+                new_col = f"{col}_{count}"
+                while new_col in seen:
+                    count += 1
+                    new_col = f"{col}_{count}"
+                unique_columns.append(new_col)
+                seen.add(new_col)
+            else:
+                unique_columns.append(col)
+                seen.add(col)
+
+        # Создание таблицы с динамической структурой
+        table_name = 'data'
+        column_definitions = ', '.join([f'"{col}" TEXT' for col in unique_columns])  # Все столбцы как TEXT
+        create_table_query = f'CREATE TABLE IF NOT EXISTS {table_name} ({column_definitions})'
+        cursor.execute(create_table_query)
+
+        # Подготовка данных для вставки
+        rows = [tuple(row[col] if col in row else None for col in columns) for row in reader]
+        placeholders = ', '.join(['?' for _ in unique_columns])  # Плейсхолдеры для значений
+        quoted_columns = ', '.join([f'"{col}"' for col in unique_columns])  # Заключаем названия колонок в кавычки
+        insert_query = f'INSERT INTO {table_name} ({quoted_columns}) VALUES ({placeholders})'
+
+        # Добавление данных в таблицу
+        cursor.executemany(insert_query, rows)
+
+    # Сохранение изменений и закрытие подключения
+    conn.commit()
+    conn.close()
+
+    print("Данные успешно загружены в таблицу SQLite.")
+
 # Initialize OpenAI with the API key
 client = OpenAI(api_key=settings.OPENAI_AI_KEY)
 @ensure_csrf_cookie
@@ -23,55 +75,74 @@ def process_query_and_visualize(request):
         return render(request, 'ai.html')
 
     try:
+        csv_to_db()
         data = json.loads(request.body)
         user_query = data.get('query', '').strip()
         db_path = data.get('db_path', '').strip()
+
+        connection = sqlite3.connect(db_path)
+        cursor = connection.cursor()
+
+        # Fetch table names
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = cursor.fetchall()
+
+        # Get schema details for each table
+        schema_details = []
+        for table_name, in tables:
+            cursor.execute(f"PRAGMA table_info({table_name});")
+            columns = cursor.fetchall()
+
+            cursor.execute(f"PRAGMA foreign_key_list({table_name});")
+            foreign_keys = cursor.fetchall()
+
+            schema_details.append({
+                "table_name": table_name,
+                "columns": columns,
+                "foreign_keys": foreign_keys,
+            })
+
+        # Generate schema representation
+        schema_representation = []
+        for table in schema_details:
+            table_name = table["table_name"]
+            schema_representation.append(f"-- Table: {table_name}")
+            schema_representation.append(f"CREATE TABLE {table_name} (")
+
+            column_definitions = []
+            for column in table["columns"]:
+                col_name = column[1]
+                col_type = column[2]
+                col_nullable = "NOT NULL" if column[3] == 0 else ""
+                col_pk = "PRIMARY KEY" if column[5] == 1 else ""
+                column_definitions.append(f"  {col_name} {col_type} {col_nullable} {col_pk}".strip())
+
+            schema_representation.extend(column_definitions)
+
+            if table["foreign_keys"]:
+                schema_representation.append(",\n  -- Foreign Keys:")
+                for fk in table["foreign_keys"]:
+                    fk_def = f"  FOREIGN KEY ({fk[3]}) REFERENCES {fk[2]}({fk[4]})"
+                    schema_representation.append(fk_def)
+
+            schema_representation.append(");")
+            schema_representation.append("")
+
+        schema_sql = "\n".join(schema_representation)
 
         if not user_query or not db_path:
             return JsonResponse({
                 'error': 'Both query and database path are required'
             }, status=400)
 
+        print("us" + schema_sql)
         # Generate SQL query using GPT
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {
                     "role": "system",
-                    "content": """You are a SQL expert. Convert natural language queries to SQL for the following schema. Return ONLY the SQL query without any explanations or markdown:
-
-                    CREATE TABLE Orders (
-                        OrderID int,
-                        CustomerID int,
-                        OrderDate datetime,
-                        OrderTime varchar(8),
-                        PRIMARY KEY (OrderID)
-                    );
-
-                    CREATE TABLE OrderDetails (
-                        OrderDetailID int,
-                        OrderID int,
-                        ProductID int,
-                        Quantity int,
-                        PRIMARY KEY (OrderDetailID)
-                    );
-
-                    CREATE TABLE Products (
-                        ProductID int,
-                        ProductName varchar(50),
-                        Category varchar(50),
-                        UnitPrice decimal(10, 2),
-                        Stock int,
-                        PRIMARY KEY (ProductID)
-                    );
-
-                    CREATE TABLE Customers (
-                        CustomerID int,
-                        FirstName varchar(50),
-                        LastName varchar(50),
-                        Email varchar(100),
-                        Phone varchar(20),
-                        PRIMARY KEY (CustomerID)
+                    "content": f"""You are a SQL expert. Convert natural language queries to SQL for the following schema. Return ONLY the SQL query without any explanations or markdown: {schema_sql}
                     );"""
                 },
                 {
@@ -116,7 +187,7 @@ def process_query_and_visualize(request):
                     "content": [
                         {
                             "type": "text",
-                            "text": "based on data and  a diagram that user want to see return data for visualizing in python return only python code and dont write python on start"
+                            "text": "based on data and a diagram that user want to see return data for visualizing in python and save it as image and save it as image with name img return only python code and dont write python on start"
                         }
                     ]
                 },
@@ -125,7 +196,7 @@ def process_query_and_visualize(request):
                     "content": [
                         {
                             "type": "text",
-                            "text": f"based on this data make a relation diagram between orders and orders quantity {sql_query}"
+                            "text": f"{user_query} {query_results}",
                         }
                     ]
                 }
@@ -144,10 +215,14 @@ def process_query_and_visualize(request):
             code = code[9:-3].strip()  # Remove the "```python" and "```"
         print(code)
         exec (code)
+        img_path = '/home/easwirt/1_projects/python/SegFault/backend/img.png'
+        with open(img_path, 'rb') as img_file:
+            img_base64 = base64.b64encode(img_file.read()).decode('utf-8')
         # Create visualization
         return JsonResponse({
             'query_results': query_results,
-            'sql_query': sql_query
+            'sql_query': sql_query,
+            'visualization': img_base64  # Include the base64 image string in the response
         })
 
     except ValueError as e:
