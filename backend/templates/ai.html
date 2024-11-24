@@ -6,107 +6,196 @@
     <title>SQL Query Visualizer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .error-message {
-            color: #dc3545;
-            margin-top: 1rem;
-            padding: 0.75rem;
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Archivo Black', sans-serif;
+            background: linear-gradient(to right, 
+                #E20074 16%,
+                #B53592 29%,
+                #804A9C 46%,
+                #4D5191 61%,
+                #2E5077 77%,
+                #2F4858 90%
+            );
+            color: #f5f5f5;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            padding-bottom: 100px; /* Space for fixed prompt field */
+        }
+
+        .button_container {
+            display: flex;
+            flex-direction: column;
+            justify-content: start;
+            align-items: center;
+            position: relative;
+        }
+
+        .top-panel {
+            width: 80%;
+            padding: 10px 20px;
+            margin-top: 20px;
+            margin-bottom: 5%;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 998;
+            gap: 10px;
+        }
+
+        .left-buttons {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            gap: 10px;
+        }
+
+        .panel-button {
+            padding: 10px 20px;
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 18px;
+            background-color: #6BBAA2;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .panel-button img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .panel-button:hover {
+            background-color: #5aa991;
+        }
+
+        .logout-button {
+            background-color: #E20074;
+        }
+
+        .logout-button:hover {
+            background-color: #c90068;
+        }
+
+        .logout-icon {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .dropdown-content {
             display: none;
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 999;
+            flex-direction: column;
+            text-align: left;
+            border-radius: 6px;
         }
-        
-        #loading {
+
+        .dropdown-content a {
+            color: black;
+            padding: 10px 20px;
+            text-decoration: none;
+            display: block;
+            font-family: 'Archivo Black', sans-serif;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .button_container.active .dropdown-content {
+            display: flex;
+        }
+
+        #error {
             display: none;
-            text-align: center;
-            margin-top: 2rem;
-        }
-        
-        .result-container {
-            margin-top: 2rem;
-            padding: 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-        }
-        
-        .sql-query {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 0.25rem;
-            white-space: pre-wrap;
-        }
-        
-        .visualization-container {
-            margin: 2rem 0;
-            text-align: center;
-        }
-        
-        .visualization-container img {
-            max-width: 100%;
-            height: auto;
-        }
-        
-        .query-results {
-            max-height: 400px;
-            overflow-y: auto;
         }
     </style>
 </head>
 <body>
     <div class="container mt-5 mb-5">
         <div class="top-panel">
-            <button class="panel-button">
-                Import dataset
-                <img src="uploadImg.svg" alt="Upload icon" width="20" height="20">
-            </button>
-            <div style="position: relative;">
-                <button class="panel-button" id="modelBtn">
-                    Choose model
-                    <img src="Arrow 1.svg" alt="Arrow down icon" width="20" height="20">
-                </button>
-                <div class="dropdown-content" id="modelDropdown">
-                    <a href="https://example.com">Option 1</a>
-                    <a href="https://example.com">Option 2</a>
-                    <a href="https://example.com">Option 3</a>
+            <div class="left-buttons">
+                <div class="button_container">
+                    <button class="panel-button">
+                        Import dataset
+                        <img src="uploadImg.svg" alt="Upload icon">
+                    </button>
                 </div>
-            </div>
-            <div style="position: relative;">
-                <button class="panel-button" id="chooseBtn">
-                    Choose dataset
-                    <img src="Arrow 2.svg" alt="Arrow down icon" width="20" height="20">
-                </button>
-                <div class="dropdown-content" id="chooseDropdown">
-                    <a href="https://example.com">Choice 1</a>
-                    <a href="https://example.com">Choice 2</a>
-                    <a href="https://example.com">Choice 3</a>
+                <div class="button_container">
+                    <button class="panel-button" onclick="toggleDropdown(this)">
+                        Choose model
+                        <img src="Arrow 1.svg" alt="Arrow down icon">
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="#model1">Model 1</a>
+                        <a href="#model2">Model 2</a>
+                        <a href="#model3">Model 3</a>
+                    </div>
+                </div>
+                <div class="button_container">
+                    <button class="panel-button" onclick="toggleDropdown(this)">
+                        Choose dataset
+                        <img src="Arrow 2.svg" alt="Arrow down icon">
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="https://example.com">Choice 1</a>
+                        <a href="https://example.com">Choice 2</a>
+                        <a href="https://example.com">Choice 3</a>
+                    </div>
                 </div>
             </div>
             <button class="panel-button logout-button" id="logoutBtn">
                 Logout
                 <svg class="logout-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 012 2v2h-2V4H5v16h9v-2h2v2a2 2 0 01-2 2H5a2 2 0 01-2-2V4a2 2 0 012-2h9z"/>
+                    <path d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 012 2v2h-2V4H5v16h9v-2h2v2a2 2 0 01-2 2H5a2 2 0 01-2-2V4a2-2-2h9z"/>
                 </svg>
             </button>
         </div>
+
         <h2 class="mb-4">SQL Query Visualizer</h2>
-        
-        
+
         <form id="queryForm" class="mb-4">
             <div class="mb-3">
                 <label for="dbPath" class="form-label">Database Path:</label>
                 <input type="text" class="form-control" id="dbPath" required
-                       placeholder="Enter the full path to your SQLite database (e.g., /path/to/your/database.db)">
+                    placeholder="Enter the full path to your SQLite database (e.g., /path/to/your/database.db)">
                 <div class="form-text">Please provide the absolute path to your SQLite database file</div>
             </div>
 
             <div class="mb-3">
                 <label for="queryInput" class="form-label">Natural Language Query:</label>
                 <textarea class="form-control" id="queryInput" rows="3" required
-                          placeholder="Example: Show me the total sales by product category for the last month"></textarea>
+                    placeholder="Example: Show me the total sales by product category for the last month"></textarea>
                 <div class="form-text">Describe what you want to know about your data in plain English</div>
             </div>
 
             <button type="submit" class="btn btn-primary">Generate Visualization</button>
         </form>
 
-        <div id="loading" class="text-center">
+        <div id="loading" class="text-center" style="display: none;">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
@@ -141,105 +230,141 @@
     </div>
 
     <script>
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
+        let dropdownTimeout;
 
-        async function processQuery(event) {
-            event.preventDefault();
+        function toggleDropdown(button) {
+            const container = button.parentElement;
+            const dropdown = container.querySelector('.dropdown-content');
 
-            const loading = document.getElementById('loading');
-            const error = document.getElementById('error');
-            const resultContainer = document.getElementById('resultContainer');
-
-            // Reset previous state
-            error.style.display = 'none';
-            resultContainer.style.display = 'none';
-            loading.style.display = 'block';
-
-            const query = document.getElementById('queryInput').value.trim();
-            const dbPath = document.getElementById('dbPath').value.trim();
-
-            if (!query || !dbPath) {
-                error.textContent = 'Please fill in both the database path and query.';
-                error.style.display = 'block';
-                loading.style.display = 'none';
-                return;
-            }
-
-            try {
-                const response = await fetch('http://localhost:8000/ai/process-query/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({
-                        query: query,
-                        db_path: dbPath
-                    })
+            if (container.classList.contains('active')) {
+                container.classList.remove('active');
+                dropdown.style.display = 'none';
+            } else {
+                document.querySelectorAll('.button_container.active').forEach(activeContainer => {
+                    activeContainer.classList.remove('active');
+                    activeContainer.querySelector('.dropdown-content').style.display = 'none';
                 });
 
-                const data = await response.json();
+                container.classList.add('active');
+                dropdown.style.display = 'flex';
 
-                if (data.error) {
-                    error.textContent = data.error;
-                    error.style.display = 'block';
-                } else {
-                    resultContainer.style.display = 'block';
+                dropdown.addEventListener('mouseenter', () => {
+                    clearTimeout(dropdownTimeout);
+                });
 
-                    // Display SQL query
-                    document.getElementById('sqlQuery').textContent = data.sql_query;
+                dropdown.addEventListener('mouseleave', () => {
+                    dropdownTimeout = setTimeout(() => {
+                        container.classList.remove('active');
+                        dropdown.style.display = 'none';
+                    }, 300);
+                });
 
-                    // Display query description
-                    document.getElementById('queryDescription').textContent = data.text || 'No description provided.';
+                button.addEventListener('mouseleave', () => {
+                    dropdownTimeout = setTimeout(() => {
+                        container.classList.remove('active');
+                        dropdown.style.display = 'none';
+                    }, 300);
+                });
 
-                    // Display results
-                    document.getElementById('queryResults').textContent =
-                        JSON.stringify(data.query_results, null, 2);
-
-                    // Display visualization
-                    const visualizationDiv = document.getElementById('visualization');
-                    visualizationDiv.innerHTML = '';
-                    if (data.visualization) {
-                        const img = document.createElement('img');
-                        img.src = 'data:image/png;base64,' + data.visualization;
-                        img.alt = 'Query visualization';
-                        img.className = 'img-fluid';
-                        visualizationDiv.appendChild(img);
-                    }
-                }
-            } catch (error) {
-                error.textContent = 'An error occurred while processing your request: ' + error.message;
-                error.style.display = 'block';
-            } finally {
-                loading.style.display = 'none';
+                container.addEventListener('mouseenter', () => {
+                    clearTimeout(dropdownTimeout);
+                });
             }
         }
-        
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-                // Send logout request to your backend
-                fetch('/auth/logout/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')  // If using Django's CSRF protection
-                    },
-                    credentials: 'same-origin'
-                })
+
+        document.getElementById('logoutBtn').addEventListener('click', function () {
+            fetch('/auth/logout/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'same-origin'
+            })
                 .then(response => {
                     if (response.ok) {
-                        window.location.href = '/login/';  // Redirect to login page
+                        window.location.href = '/login/';
                     }
                 })
                 .catch(error => {
                     console.error('Logout failed:', error);
                 });
-            });
+        });
 
-        document.getElementById('queryForm').addEventListener('submit', processQuery);
+        async function processQuery(event) {
+    event.preventDefault(); // Предотвращает перезагрузку страницы
+
+    const loading = document.getElementById('loading');
+    const error = document.getElementById('error');
+    const resultContainer = document.getElementById('resultContainer');
+
+    // Скрываем сообщения об ошибке и результаты
+    error.style.display = 'none'; // Скрываем блок ошибки изначально
+    resultContainer.style.display = 'none';
+
+    // Показываем индикатор загрузки
+    loading.style.display = 'block';
+
+    const query = document.getElementById('queryInput').value.trim();
+    const dbPath = document.getElementById('dbPath').value.trim();
+
+    // Проверяем, что оба поля заполнены
+    if (!query || !dbPath) {
+        loading.style.display = 'none'; // Скрываем загрузку при ошибке
+        error.textContent = 'Please fill in both the database path and query.';
+        error.style.display = 'block'; // Отображаем блок ошибки
+        return;
+    }
+
+    try {
+        // Отправка данных на сервер
+        const response = await fetch('http://localhost:8000/ai/process-query/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken') // Если используется CSRF защита
+            },
+            body: JSON.stringify({
+                query: query,
+                db_path: dbPath
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            error.textContent = data.error;
+            error.style.display = 'block'; // Показываем блок ошибки
+        } else {
+            // Отображение результатов
+            resultContainer.style.display = 'block';
+            document.getElementById('sqlQuery').textContent = data.sql_query;
+            document.getElementById('queryDescription').textContent = data.text || 'No description provided.';
+            document.getElementById('queryResults').textContent =
+                JSON.stringify(data.query_results, null, 2);
+
+            // Генерация визуализации
+            const visualizationDiv = document.getElementById('visualization');
+            visualizationDiv.innerHTML = '';
+            if (data.visualization) {
+                const img = document.createElement('img');
+                img.src = 'data:image/png;base64,' + data.visualization;
+                img.alt = 'Query visualization';
+                img.className = 'img-fluid';
+                visualizationDiv.appendChild(img);
+            }
+        }
+    } catch (error) {
+        error.textContent = 'An error occurred while processing your request: ' + error.message;
+        error.style.display = 'block'; // Показываем блок ошибки
+    } finally {
+        // Скрываем индикатор загрузки
+        loading.style.display = 'none';
+    }
+}
+
+// Добавляем обработчик события на форму
+document.getElementById('queryForm').addEventListener('submit', processQuery);
     </script>
 </body>
 </html>
