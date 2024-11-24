@@ -1,136 +1,214 @@
-<html><head><base href="." />
+<html><head><base href="/" target="_self"><title>Smart Data Ally</title>
 <style>
-body {
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap');
+
+body, html {
     margin: 0;
     padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    height: 100%;
+    overflow-x: hidden;
+    font-family: 'Archivo Black', sans-serif;
+}
+
+.container {
     min-height: 100vh;
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(120deg, #2980b9, #8e44ad);
-}
-
-.login-container {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 15px 25px rgba(0,0,0,0.2);
-    width: 300px;
-}
-
-.login-container h2 {
-    margin: 0 0 30px;
-    text-align: center;
-    color: #333;
-}
-
-.input-group {
+    background: linear-gradient(to left,
+        #E20074 16%,
+        #B53592 29%,
+        #804A9C 46%,
+        #4D5191 61%,
+        #2E5077 77%,
+        #2F4858 90%
+    );
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     position: relative;
-    margin-bottom: 30px;
 }
 
-.input-group input {
-    width: 100%;
-    padding: 10px 0;
-    font-size: 16px;
-    color: #333;
-    border: none;
-    border-bottom: 2px solid #ddd;
-    outline: none;
-    background: transparent;
-    transition: 0.3s;
+.container.guest {
+    background: linear-gradient(to right,
+        #E20074 16%,
+        #B53592 29%,
+        #804A9C 46%,
+        #4D5191 61%,
+        #2E5077 77%,
+        #2F4858 90%
+    );
 }
 
-.input-group label {
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 10px 0;
-    font-size: 16px;
-    color: #666;
-    pointer-events: none;
-    transition: 0.3s;
-}
-
-.input-group input:focus ~ label,
-.input-group input:valid ~ label {
-    top: -20px;
-    font-size: 12px;
-    color: #2980b9;
-}
-
-.input-group input:focus {
-    border-bottom: 2px solid #2980b9;
-}
-
-button {
-    width: 100%;
-    padding: 10px 0;
-    background: #2980b9;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
+.burger-menu {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 35px;
+    height: 35px;
     cursor: pointer;
-    font-size: 16px;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+}
+
+.burger-menu svg {
+    fill: #FFE3F0;
+}
+
+.burger-menu.active .bar1 {
+    transform: translateY(21px) rotate(-45deg);
+}
+
+.burger-menu.active .bar2 {
+    opacity: 0;
+}
+
+.burger-menu.active .bar3 {
+    transform: translateY(-21px) rotate(45deg);
+}
+
+.burger-bar {
+    width: 100%;
+    height: 4px;
+    background-color: #FFE3F0;
+    margin: 6px 0;
     transition: 0.3s;
 }
 
-button:hover {
-    background: #3498db;
-}
-
-.register-link {
-    margin-top: 20px;
+.main-content {
     text-align: center;
-    font-size: 14px;
-    color: #666;
+    transition: filter 0.3s ease;
 }
 
-.register-link a {
-    color: #2980b9;
+.title {
+    font-size: 96px;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 72px;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.signup-btn {
+    margin-top: 40px;
+    padding: 15px 50px;
+    font-size: 48px;
+    font-family: 'Archivo Black', sans-serif;
+    background: #6BBAA2;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #804A9C;
+    transition: transform 0.2s ease;
+}
+
+.signup-btn:hover {
+    transform: scale(1.05);
+}
+
+.continue-link {
+    margin-top: 20px;
+    font-size: 36px;
+    color: #FFFFFF;
     text-decoration: none;
 }
 
-.register-link a:hover {
+.continue-link:hover {
     text-decoration: underline;
+}
+
+.menu-overlay {
+    position: fixed;
+    right: -25%;
+    top: 0;
+    width: 25%;
+    height: 100%;
+    background: #E20074;
+    transition: right 0.3s ease;
+    z-index: 999;
+}
+
+.blur-content {
+    filter: blur(25px);
+}
+
+.menu-content {
+    padding: 80px 20px;
+    color: #FFFFFF;
+}
+
+.menu-content ul {
+    list-style: none;
+    padding: 0;
+}
+
+.menu-content li {
+    margin: 20px 0;
+    font-size: 24px;
+}
+
+.menu-visible {
+    right: 0;
 }
 </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Login</h2>
-        <form id="loginForm">
-            <div class="input-group">
-                <input type="text" id="username" required>
-                <label for="username">Username</label>
+    <div class="container" id="mainContainer">
+        <div class="burger-menu">
+            <div class="burger-bar bar1"></div>
+            <div class="burger-bar bar2"></div>
+            <div class="burger-bar bar3"></div>
+        </div>
+
+        <div class="menu-overlay">
+            <div class="menu-content">
+                <h2>Menu</h2>
+                <ul>
+                    <li>Home</li>
+                    <li>About</li>
+                    <li>Services</li>
+                    <li>Contact</li>
+                </ul>
             </div>
-            <div class="input-group">
-                <input type="password" id="password" required>
-                <label for="password">Password</label>
-            </div>
-            <button type="submit">Login</button>
-            <div class="register-link">
-                Don't have an account? <a href="https://example.com/register">Register here</a>
-            </div>
-        </form>
+        </div>
+
+        <div class="main-content">
+            <h1 class="title">SMART DATA ALLY</h1>
+            <h2 class="subtitle">Data Analysis</h2>
+            <h2 class="subtitle">for Everyone</h2>
+            <button id="signupButton" class="signup-btn">Sign Up</button>
+            <br>
+            <a href="/ai/process-query/" class="continue-link" id="guestLink">or continue without account</a>
+        </div>
     </div>
 
-<script>
-document.getElementById('loginForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    
-    // Here you would typically send these credentials to your server
-    console.log('Login attempt:', { username, password });
-    
-    // For demo purposes, show an alert
-    alert(`Login attempt with username: ${username}`);
-    
-    // Clear the form
-    this.reset();
-});
-</script>
+
+    <script>
+        const burgerMenu = document.querySelector('.burger-menu');
+        const menuOverlay = document.querySelector('.menu-overlay');
+        const mainContent = document.querySelector('.main-content');
+        const container = document.getElementById('mainContainer');
+        const guestLink = document.getElementById('guestLink');
+        const signupButton = document.getElementById('signupButton');
+
+        signupButton.addEventListener('click', () => {
+            window.location.href="/auth/register_user/"
+        })
+
+        burgerMenu.addEventListener('click', () => {
+            burgerMenu.classList.toggle('active');
+            menuOverlay.classList.toggle('menu-visible');
+            if (menuOverlay.classList.contains('menu-visible')) {
+                mainContent.classList.add('blur-content');
+            } else {
+                mainContent.classList.remove('blur-content');
+            }
+        });
+
+        // Check if we're on the guest page
+        if (window.location.pathname === '/guest') {
+            container.classList.add('guest');
+        }
+    </script>
 </body></html>

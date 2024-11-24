@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'authenticate',
+    'ai',
+    'uploadfiels'
 ]
 
 MIDDLEWARE = [
@@ -129,3 +131,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 load_dotenv()
 OPENAI_AI_KEY = os.getenv('OPENAI_AI_KEY')
+
+MEDIA_URL = '/databases/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'databases/')

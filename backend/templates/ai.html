@@ -51,7 +51,42 @@
 </head>
 <body>
     <div class="container mt-5 mb-5">
+        <div class="top-panel">
+            <button class="panel-button">
+                Import dataset
+                <img src="uploadImg.svg" alt="Upload icon" width="20" height="20">
+            </button>
+            <div style="position: relative;">
+                <button class="panel-button" id="modelBtn">
+                    Choose model
+                    <img src="Arrow 1.svg" alt="Arrow down icon" width="20" height="20">
+                </button>
+                <div class="dropdown-content" id="modelDropdown">
+                    <a href="https://example.com">Option 1</a>
+                    <a href="https://example.com">Option 2</a>
+                    <a href="https://example.com">Option 3</a>
+                </div>
+            </div>
+            <div style="position: relative;">
+                <button class="panel-button" id="chooseBtn">
+                    Choose dataset
+                    <img src="Arrow 2.svg" alt="Arrow down icon" width="20" height="20">
+                </button>
+                <div class="dropdown-content" id="chooseDropdown">
+                    <a href="https://example.com">Choice 1</a>
+                    <a href="https://example.com">Choice 2</a>
+                    <a href="https://example.com">Choice 3</a>
+                </div>
+            </div>
+            <button class="panel-button logout-button" id="logoutBtn">
+                Logout
+                <svg class="logout-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 012 2v2h-2V4H5v16h9v-2h2v2a2 2 0 01-2 2H5a2 2 0 01-2-2V4a2 2 0 012-2h9z"/>
+                </svg>
+            </button>
+        </div>
         <h2 class="mb-4">SQL Query Visualizer</h2>
+        
         
         <form id="queryForm" class="mb-4">
             <div class="mb-3">
@@ -84,6 +119,11 @@
             <div class="mb-4">
                 <h5>Generated SQL Query:</h5>
                 <pre id="sqlQuery" class="sql-query"></pre>
+            </div>
+
+            <div class="mb-4">
+                <h5>Query Description:</h5>
+                <div id="queryDescription" class="sql-query"></div>
             </div>
 
             <div class="visualization-container">
@@ -153,6 +193,9 @@
                     // Display SQL query
                     document.getElementById('sqlQuery').textContent = data.sql_query;
 
+                    // Display query description
+                    document.getElementById('queryDescription').textContent = data.text || 'No description provided.';
+
                     // Display results
                     document.getElementById('queryResults').textContent =
                         JSON.stringify(data.query_results, null, 2);
@@ -175,6 +218,26 @@
                 loading.style.display = 'none';
             }
         }
+        
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+                // Send logout request to your backend
+                fetch('/auth/logout/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')  // If using Django's CSRF protection
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/login/';  // Redirect to login page
+                    }
+                })
+                .catch(error => {
+                    console.error('Logout failed:', error);
+                });
+            });
 
         document.getElementById('queryForm').addEventListener('submit', processQuery);
     </script>
